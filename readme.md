@@ -1,6 +1,6 @@
 # Solution from the JETFORK team
 
-screencast https://drive.google.com/drive/u/0/folders/1yLE6fezHGcHaO9h38WrXzeK6s9WNmmYe
+screencast https://drive.google.com/drive/folders/1yLE6fezHGcHaO9h38WrXzeK6s9WNmmYe?usp=share_link
 
 
 A solution that we consider based on open source technologies: Postgree SQL is used as a DBMS, Python libraries for machine learning, Django and Plotly are used for data visualization 
