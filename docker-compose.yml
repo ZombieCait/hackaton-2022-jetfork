@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14.4-alpine
+    ports:
+      - 0.0.0.0:5432:5432
+    container_name: db
+    env_file:
+      - .env
+  app:
+    build:
+      context: app
+      args:
+        - DB_DOCKER_HOST=db
+        - DB_PORT=${DB_PORT}
+        - POSTGRES_DB=${POSTGRES_DB}
+        - POSTGRES_USER=${POSTGRES_USER}
+        - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+    container_name: hack_app
+#    command: "python manage.py makemigrations && python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    command: >
+      sh -c "python manage.py makemigrations &&
+             python manage.py makemigrations eprf &&
+             python manage.py migrate &&
+             python manage.py runserver 0.0.0.0:8000"
+#      python manage.py collectstatic --noinput &&
+    ports:
+      - 0.0.0.0:8800:8000
+    volumes:
+      - ./app:/app
+    #    env_file:
+    #      - app/.env
+    depends_on:
+      - db
+    links:
+      - db:db
+#    networks:
+#      - djangonetwork
+#    restart: always
+#
+#
+#networks:
+#  djangonetwork:
+#    driver: bridge

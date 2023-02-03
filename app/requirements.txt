@@ -1,0 +1,18 @@
+https://files.pythonhosted.org/packages/60/5c/f9eb307c9b14ec1b5ff96150d0caa268df52f74cf032f67ca13bb7c6964b/catboost-1.0.6-cp39-none-manylinux1_x86_64.whl
+psycopg2==2.9.3
+psycopg2-binary==2.9.3
+Django==4.0.6
+sqlalchemy==1.4.39
+openpyxl==3.0.10
+pandas==1.4.3
+
+# catboost==1.0.6
+# catboost
+fasttext==0.9.2
+nmslib==2.1.1
+razdel
+xlsxwriter==3.0.3
+joblib==1.1.0
+scikit-learn==1.1.1
+fastparquet==0.8.1
+plotly

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>{% block title %}{% endblock %}</title>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/masonry-layout@4.2.2/dist/masonry.pkgd.min.js"
+            integrity="sha384-GNFwBvfVxBkLMJpYMOABq3c+d3KnQxudP/mGPkzpZSTYykLBNsZEnG2D9G/X/+7D" crossorigin="anonymous"
+            async></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-F3w7mX95PdgyTmZZMECAngseQB83DfGTowi0iMjiWaeVhAn4FJkqJByhZMI3AhiU" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.1/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-/bQdsTh/da6pkI1MST/rWKFNjaCP5gBSY4sEBT38Q/9RBh9AH40zEOg7Hlq2THRZ"
+            crossorigin="anonymous"></script>
+
+
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.14.3/dist/umd/popper.min.js"
+            integrity="sha384-ZMP7rVo3mIykV+2+9J3UJ46jBk0WLaUAdn689aCwoqbBJiSnjAK/l8WvCWPIPm49"
+            crossorigin="anonymous"></script>
+
+    <!-- Latest compiled and minified CSS -->
+    <link rel="stylesheet"
+          href="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/css/bootstrap-select.min.css">
+    <!-- Latest compiled and minified JavaScript -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/bootstrap-select.min.js"></script>
+    <!-- (Optional) Latest compiled and minified JavaScript translation files -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap-select@1.14.0-beta3/dist/js/i18n/defaults-ru_RU.js"></script>
+
+    <script src="https://unpkg.com/imask"></script>
+    {% block headers %}
+    {% endblock %}
+</head>
+<body class="bg-light">
+{% load static %}
+
+<body class="bg-light">
+<nav class="py-2 bg-light border-bottom">
+    <div class="container d-flex flex-wrap">
+
+
+        <ul class="nav me-auto">
+            <li class="nav-item"><a href="{% url 'home' %}"
+                                    aria-current="page"><img src="{% static 'logo_black_transporent.png' %}"
+                                                             width="80dp"
+                                                             alt="Command logo"></a></li>
+            <li class="nav-item" style="margin-left: 50px;"><a href="{% url 'home' %}" class="btn btn-success"
+                                                               aria-current="page">Проверка</a></li>
+            <li class="nav-item" style="margin-left: 30px;"><a href="{% url 'producers' %}" class="btn btn-success"
+                                                               aria-current="page">Карта безопасной продукции</a></li>
+        </ul>
+        <ul class="nav">
+            <li class="nav-link link-dark">Команда <b>JETFork</b></li>
+            {#            <li class="nav-item"><a href="#" class="nav-link link-dark px-2 active"#}
+            {#                                    aria-current="page">Словари</a></li>#}
+            {#            <li class="nav-item"><a href="{% url 'home' %}" class="nav-link link-dark px-2 active"#}
+            {#                                    aria-current="page">Проверка</a></li>#}
+        </ul>
+    </div>
+</nav>
+
+
+<div class="container-lg">
+    <div class="row">
+        <div class="col col-lg-3 col-sm-12 mt-3">
+            <div class="card">
+                <img src="{% static 'logo_nsa_cyr_gor.png' %}" class="card-img-top" alt="...">
+                <div class="card-body">
+                    {% block left_menu %}
+                        <h5 class="card-title">Сервис проверки</h5>
+                        <p class="card-text">Сервис позволяет автоматически проверять корректность предоставленных
+                            сведений<br>
+                            Для работы сервиса достаточно загрузить файл с предоставленными данными<br>
+                            Возможные варианты ответа сервиса:</p>
+                        <ul>
+                            <li>Зелёный свет - проблем не выявлено</li>
+                            <li>Красный свет - выявлены серьёзные расхождения. Не рекомендуется одобрение</li>
+                        </ul>
+                        <p>
+                            Сервис позволяет сформировать отчет либо выгрузить данные в формате xlsx
+                        </p>
+                    {% endblock %}
+                </div>
+            </div>
+        </div>
+        <div class="col col-lg-1 col-md-0 col-sm-0 d-sm-none d-md-none">
+        </div>
+        <div class="col col-lg-8 col-md-12 col-sm-12 mt-3">
+            <div class="card">
+                <div class="card-body">
+                    {% block content %}{% endblock %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    {#    <div class="py-3">#}
+    {#        {% block headbuttons %}{% endblock %}#}
+    {#        <hr class="md-4">#}
+    {#        {% block errors %}{% endblock %}#}
+    {#        {% block content %}{% endblock %}#}
+    {#    </div>#}
+</div>
+
+{% block scripts %}
+{% endblock %}
+</body>
+</html>

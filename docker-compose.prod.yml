@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  db:
+    image: postgres:14.4-alpine
+    volumes:
+#      - type: bind
+#        source: ./db/data
+#        target: /var/lib/postgresql/data/
+      - ./db/data:/var/lib/postgresql/data/
+    env_file:
+      - app/.env.prod
+    ports:
+      - "${DB_PORT}:5432"
+      
+  app:
+    build:
+      context: ./app
+      dockerfile: Dockerfile.prod
+    command: gunicorn hackathon.wsgi:application --bind 0.0.0.0:8000
+    ports:
+      - 8000:8000
+    env_file:
+      - app/.env.prod
+    depends_on:
+      - db
+
+# docker-compose -f docker-compose.prod.yml up -d --build 

@@ -1,0 +1,268 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Главная страница
+{% endblock %}
+
+{% block headbuttons %}
+    <div class="list-group">
+    </div>
+{% endblock %}
+
+{% block headers %}
+    <style type="text/css">
+        .fixWidthPiclke ~ .dropdown-menu {
+            max-width: 65%;
+            min-width: 30%;
+        }
+
+        .required:after {
+            color: red;
+            content: " *";
+        }
+    </style>
+{% endblock %}
+
+{% load static %}
+
+{% block content %}
+    <h1>Форма ввода</h1>
+    <div>
+        <div onsubmit="//singleCheck(this);return false" name="checkOne" id="formCheckOne">
+            <div class="mb-3">
+                <label for="inputProductName" class="form-label required">Общее наименование продукции</label>
+                <textarea class="form-control" id="inputProductName" name="excelFile" rows="3"></textarea>
+            </div>
+
+            <div class="mb-3" id="divProductName">
+                <label for="product_group" class="form-label">Группа</label>
+                <select class="selectpicker m-2 fixWidthPiclke" id="product_group" data-live-search="true"
+                        title="Выбрать" data-width="98%">
+                    {% for product_group_row in product_groups %}
+                        <option value="{{ product_group_row }}">{{ product_group_row }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="technical_regulations" class="form-label">Регламент</label>
+                <select class="selectpicker m-2 fixWidthPiclke" id="technical_regulations" data-live-search="true"
+                        title="Выбрать" data-width="98%">
+                    {% for technical_regulation_row in technical_regulations %}
+                        <option value="{{ technical_regulation_row }}">{{ technical_regulation_row }}</option>
+                    {% endfor %}
+                </select>
+
+                <label for="inputSubcategory" class="form-label">ТН-ВЭД</label>
+                <input id="ved-code" class="form-control" placeholder="00 00 00000000" style="width: 160px;">
+
+            </div>
+            <button class="btn btn-primary mb-3" id="formCheckOneButton">
+                Отправить
+            </button>
+            <div id="singleAlert">
+
+            </div>
+
+        </div>
+    </div>
+    <hr class="md-4">
+    <div>
+        <h1>Поточная загрузка</h1>
+        <p>При загрузке данных необходимо использовать шаблон и не менять в нем колонки:</p>
+        <div class="row mb-3 mx-5 d-flex justify-content-around">
+            <div class="col-sm">
+                <a href="{% static 'template01.xlsx' %}"><img src="{% static 'xlsx_format_logo.png' %}" width="45dp"
+                                                              alt="Command logo">
+                    Excel</a>
+            </div>
+            <div class="col-sm">
+                <a href="{% static 'template02.csv' %}">
+                    <img src="{% static 'csv_format_logo.png' %}" width="45dp" alt="Command logo">
+                    CSV</a>
+            </div>
+        </div>
+
+        <form action="{% url 'home' %}" enctype="multipart/form-data" method="post" target="_blank">
+            {% csrf_token %}
+            <label for="formFileLg" class="form-label">Прикрепить файл</label>
+            <div class="mb-3">
+                <input class="form-control mb-3" id="formFileLg" name="excelFile" type="file"
+                       accept=".csv, .xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+                <button type="submit" class="btn btn-primary" name="report" value="html">Сформировать отчет</button>
+                <button type="submit" class="btn btn-primary" name="report" value="xlsx">Скачать xlsx</button>
+            </div>
+        </form>
+    </div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        function listDatabaseFields() {
+            let selectCategory = document.getElementById('inputCategory').value;
+            let idCatecory = selectCategory.split(' ', 1)[0]
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            let inputSubcategory = document.getElementById('inputSubcategory');
+            inputSubcategory.value = ''
+            let parent = document.getElementById('dataListSubcategory'); // Subcategory List
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+
+
+            let request = new Request(
+                'api/category/' + idCatecory,
+                {headers: {'X-CSRFToken': csrfToken}}
+            )
+            fetch(request)
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    {#Получаем данные#}
+                    let columnListByTable = data['subcategories']
+                    for (let i in columnListByTable) {
+                        let input = document.createElement('option');
+                        input.setAttribute('type', 'checkbox');
+                        input.setAttribute('value', `${columnListByTable[i]['sub_code']} ${columnListByTable[i]['text']}`);
+                        parent.appendChild(input)
+                    }
+                });
+        }
+
+        function singleCheck(formCheckOneData) {
+            let button = document.getElementById('formCheckOneButton');
+            console.log(button)
+            button.innerHTML = '<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true" id="formCheckOneButtonLoad"></span>Отправить';
+            let loader = document.getElementById('formCheckOneButtonLoad');
+            console.log(loader)
+            loader.hidden = false;
+            loader.removeAttribute('hidden')
+
+            let divProductNameMessages = document.getElementById('divProductNameMessages');
+            while (divProductNameMessages.firstChild) {
+                divProductNameMessages.removeChild(divProductNameMessages.firstChild);
+            }
+
+            let inputProductName = document.getElementById('inputProductName').value;
+            let inputCategory = document.getElementById('inputCategory').value;
+            let inputCategoryId = inputCategory.split(' ', 1)[0]
+            let inputSubcategory = document.getElementById('inputSubcategory').value;
+            let inputSubategoryId = inputSubcategory.split(' ', 1)[0]
+            sendData = {
+                'inputProductName': inputProductName,
+                'inputCategoryId': inputCategoryId,
+                'inputSubcategoryId': inputSubategoryId
+            }
+            console.log(sendData)
+
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+            let request = new Request(
+                {#'{% url 'single_check' %}',#}
+                {headers: {'X-CSRFToken': csrfToken}}
+            )
+
+            fetch(request, {
+                method: 'POST',
+                mode: 'same-origin',
+                body: JSON.stringify(sendData),
+            })
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    {#Получаем данные#}
+                    console.log(data)
+                    if (data['status'] == 'ok') {
+                        let result = data['result']
+                        let label_category_id = result['label_category_id']
+                        let label_category_text = result['label_category_text']
+                        let probability = result['probability']
+                        let is_equal = result['is_equal']
+                        let light = result['light']
+
+                        if (is_equal != true) {
+                            let category_hint = document.createElement('div');
+                            category_hint.setAttribute('role', 'alert');
+                            category_hint.setAttribute('class', 'alert alert-primary');
+                            category_hint.innerHTML = `Возможно, под это наименование подходит категория<br><b>${label_category_id} ${label_category_text}</b>?`
+                            divProductNameMessages.appendChild(category_hint);
+                        }
+
+                        console.log(label_category_id)
+                        console.log(label_category_text)
+                        console.log(probability)
+                        console.log(is_equal)
+                        console.log(light)
+
+                    } else {
+                        console.log(data)
+                    }
+                });
+            loader.setAttribute('hidden', '');
+            button.disabled = false;
+        }
+
+
+    </script>
+    <script>
+        $(function () {
+            var regExpMask = IMask(
+                document.getElementById('ved-code'),
+                {
+                    {#mask: /^[1-6]\d{0,5}$/#}
+                    mask: '00  00  000000'
+                });
+            $('#formCheckOneButton').on('click', function () {
+                $('#singleAlert').empty();
+                let product_name = $('#inputProductName').val();
+                if (product_name.trim().length == 0) {
+                    $('#singleAlert').append('<div class="alert alert-danger" >Отсутствует наименование продукции!</div>');
+                    return;
+                }
+                $('#formCheckOneButton')[0].innerHTML = '<span class="spinner-border spinner-border-sm" role="status" id="formCheckOneButtonLoad"></span> Отправить';
+
+                let category_name = $('#product_group').val();
+                let reglament_name = $('#technical_regulations').val();
+                let VED = $('#ved-code').val().split('  ').join('').padEnd(10, '0');
+                sendData = {
+                    'product_name': product_name,
+                    'category_name': category_name,
+                    'reglament_name': reglament_name,
+                    'VED': VED,
+                }
+                console.log(sendData)
+
+                let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                let request = new Request(
+                    '{% url 'single_check' %}',
+                    {headers: {'X-CSRFToken': csrfToken}}
+                )
+
+                fetch(request, {
+                    method: 'POST',
+                    mode: 'same-origin',
+                    body: JSON.stringify(sendData),
+                })
+                    .then((response) => {
+                        return response.json();
+                    })
+                    .then((data) => {
+                        {#Получаем данные#}
+                        console.log(data)
+                        if (data['status'] == 'ok') {
+                            console.log(data.result);
+                            let res = data.result;
+                            let ved = `<li><b>Коды ТН ВЭД:</b> ${res['Коды ТН ВЭД']}</li>` || ''
+                            $('#singleAlert').append(`<div class="alert alert-success" id="singleAlertSuccess"><ul><li><b>Группа продукции:</b> ${res['Группа продукции']}</li><li><b>Технические регламенты:</b> ${res['Технические регламенты']}</li></ul></div>`);
+                            $('#formCheckOneButtonLoad').remove();
+                        } else {
+                            console.log(data)
+                        }
+                    }).catch((error) => {
+                        console.log(error);
+                });
+            });
+        })
+    </script>
+
+{% endblock %}

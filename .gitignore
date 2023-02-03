@@ -1,0 +1,13 @@
+.vscode
+.idea
+.DS_Store
+app/venv
+*__pycache__*
+app/eprf/migrations
+
+app/resources/zipcodes/*
+app/resources/veds/*
+materials/*
+app/__pycache__
+app/hackathon/__pycache__/
+app/eprf/ml/*

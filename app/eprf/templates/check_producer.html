@@ -1,0 +1,201 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Проверка производителя
+{% endblock %}
+
+{% block headers %}
+    {#    <script src="https://api-maps.yandex.ru/2.1/?apikey=10424d5c-4d88-4067-86fc-52b0b9cc2d70&lang=ru_RU"#}
+    {#            type="text/javascript"></script>#}
+    <!-- Bootstrap select picker -->
+    <style type="text/css">
+        #filterVedGroups ~ .dropdown-menu {
+            max-width: 300%;
+            min-width: 50%;
+        }
+    </style>
+{% endblock %}
+
+{% block headbuttons %}
+{% endblock %}
+
+{% load static %}
+
+{% block content %}
+<h1>Проверка производителя</h1>
+<div>
+    {#        <div>Воспользуйтесь фильтрами </div>#}
+    <div id="map" ></div>
+    {% autoescape off %}
+    {{ plot_div }}
+    {% endautoescape %}
+</div>
+{% endblock %}
+
+{% block scripts %}
+    <script>
+        ymaps.ready(init);
+
+        function init() {
+            // Создание карты.
+            var myMap = new ymaps.Map("map", {
+                // Координаты центра карты.
+                // Порядок по умолчанию: «широта, долгота».
+                // Чтобы не определять координаты центра карты вручную,
+                // воспользуйтесь инструментом Определение координат.
+                center: [55.76, 37.64],
+                // Уровень масштабирования. Допустимые значения:
+                // от 0 (весь мир) до 19.
+                zoom: 4
+            });
+        }
+    </script>
+    <script>
+        function getFilterCountry() {
+            let selectCategory = document.getElementById('filterCountry').value;
+            let countryName = selectCategory.split(' ', 1)[0]
+            let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+            let inputSubcategory = document.getElementById('inputSubcategory');
+            inputSubcategory.value = ''
+            let parent = document.getElementById('dataListSubcategory'); // Subcategory List
+            while (parent.firstChild) {
+                parent.removeChild(parent.firstChild);
+            }
+
+
+            let request = new Request(
+                'api/countries/' + countryName,
+                {headers: {'X-CSRFToken': csrfToken}}
+            )
+            fetch(request)
+                .then((response) => {
+                    return response.json();
+                })
+                .then((data) => {
+                    {#Получаем данные#}
+                    let columnListByTable = data['subcategories']
+                    for (let i in columnListByTable) {
+                        let input = document.createElement('option');
+                        input.setAttribute('type', 'checkbox');
+                        input.setAttribute('value', `${columnListByTable[i]['sub_code']} ${columnListByTable[i]['text']}`);
+                        parent.appendChild(input)
+                    }
+                });
+        }
+    </script>
+    <script>
+        $(function () {
+            $('select').selectpicker();
+            console.log('DONE');
+            $('#filter1VedGroups').on('changed.bs.select', function (e, clickedIndex, isSelected, previousValue) {
+                if (isSelected) {
+                    let ved_groups_val = $('#filter1VedGroups').selectpicker('val');
+                    {#$('#filterVedTovPoz').prop('disabled', false);#}
+                    {#$('#filterVedTovPoz').selectpicker('refresh');#}
+                    $('#filter2VedTovPoz').empty();
+                    $('#filter2VedTovPoz > option').remove();
+
+                    let csrfToken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+                    let detail_name = 'filterVedGroups';
+                    let request = new Request(
+                        '{% url 'get_detail_sets' %}',
+                        {headers: {'X-CSRFToken': csrfToken}}
+                    );
+                    let data = {
+                        name: detail_name,
+                        val: ved_groups_val
+                    };
+                    fetch(request, {
+                        method: 'POST',
+                        mode: 'same-origin',
+                        body: JSON.stringify(data),
+                    }).then((response) => {
+                        return response.json();
+                    }).then((data) => {
+                        for (elem of data.result) {
+                            $('#filter2VedTovPoz').append(`<option value="${elem.TOV_POZ}" data-subtext="${elem.TOV_POZ_text}">${elem.TOV_POZ}</option>`);
+                        }
+                        $('#filter2VedTovPoz').selectpicker('refresh');
+                        $('#filter2VedTovPoz').selectpicker('val', '');
+                    }).catch((error) => {
+                        console.log(error);
+                    });
+                }
+            });
+
+        });
+    </script>
+
+{% endblock %}
+
+
+{% block left_menu %}
+    <h4>Параметры фильтрации</h4>
+
+    <select class="selectpicker m-2" id="filterCountry" data-live-search="true" title="Выбрать страну" data-width="95%">
+        {% for filterCountry in filterCountries %}
+            <option value="{{ filterCountry.producer_country }}">{{ filterCountry.producer_country }}</option>
+        {% endfor %}
+    </select>
+    <select class="selectpicker m-2" id="filter1VedGroups" data-live-search="true" title="Группа ТН-ВЕД"
+            data-width="95%">
+        {% for filterVedGroup in filterVedGroups %}
+            <option value="{{ filterVedGroup.GRUPPA }}"
+                    data-subtext="{{ filterVedGroup.GRUPPA_text }}">{{ filterVedGroup.GRUPPA }}</option>
+        {% endfor %}
+    </select>
+
+    <select class="selectpicker m-2" id="filter2VedTovPoz" data-live-search="true"
+            title="Товарная позиция ТН-ВЕД" data-width="95%">
+    </select>
+
+    <select class="selectpicker m-2" id="filterLabs" data-live-search="true" title="Лаборатория" data-width="95%">
+        {% for filterLab in filterLabs %}
+            <option value="{{ filterLab.filterLab }}">{{ filterLab.lab_name }}</option>
+        {% endfor %}
+    </select>
+
+    <div id="filterCountryMessages" class="m-2"></div>
+
+{##}
+{#    <label for="inputSubcategory" class="form-label">ТН-ВЕД</label>#}
+{#    <label for="inputSubcategory" class="form-label">ТН-ВЕД раздел</label>#}
+{#    <div class="col col-md m-2">#}
+{#        <input class="form-control" list="dataListSubcategory" id="inputSubcategory"#}
+{#               placeholder="00" name="tableName"#}
+{#               onkeydown="return event.key != 'Enter';"#}
+{#               onchange="">#}
+{#    </div>#}
+{#    <label for="inputSubcategory" class="form-label">ТН-ВЕД группа</label>#}
+{#    <div class="col col-md m-2">#}
+{#        <input class="form-control" list="dataListSubcategory" id="inputSubcategory"#}
+{#               placeholder="00" name="tableName"#}
+{#               onkeydown="return event.key != 'Enter';"#}
+{#               onchange="">#}
+{#    </div>#}
+{##}
+{#    <label for="inputCategory" class="form-label">Наименование ТН-ВЕД</label>#}
+{#    <input class="form-control" list="dataListCategory" id="inputCategory"#}
+{#           placeholder="Кликните, чтобы выбрать или начните вводить" name="inputCategory"#}
+{#           onkeydown="return event.key != 'Enter';"#}
+{#           onchange="listDatabaseFields()">#}
+{#    <div id="divProductNameMessages" class="m-2"></div>#}
+{##}
+{#    <label for="inputCategory" class="form-label">Производитель</label>#}
+{#    <input class="form-control" list="dataListCategory" id="inputCategory"#}
+{#           placeholder="Кликните, чтобы выбрать или начните вводить" name="inputCategory"#}
+{#           onkeydown="return event.key != 'Enter';"#}
+{#           onchange="listDatabaseFields()">#}
+{#    <div id="divProductNameMessages" class="m-2"></div>#}
+{##}
+{#    <label for="inputCategory" class="form-label">Лаборатория</label>#}
+{#    <input class="form-control" list="dataListCategory" id="inputCategory"#}
+{#           placeholder="Кликните, чтобы выбрать или начните вводить" name="inputCategory"#}
+{#           onkeydown="return event.key != 'Enter';"#}
+{#           onchange="listDatabaseFields()">#}
+{#    <div id="divProductNameMessages" class="m-2"></div>#}
+{##}
+{#    <div>Все, ошибка, без ошибки</div>#}
+    {% csrf_token %}
+{% endblock %}
